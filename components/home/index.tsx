@@ -18,7 +18,6 @@ function App() {
     headers.append("Access-Control-Allow-Origin", "*");
     headers.append("crossdomain", "true");
 
-    const body = formData;
     const timeBeforeTranslate = Date.now();
 
     await Tesseract.recognize(
@@ -28,7 +27,9 @@ function App() {
     ).then(({ data: { text } }) => {
       setOCRText(text);
     });
+    console.log('TIme to translate = ', Date.now() - timeBeforeTranslate);
     setLoading(false);
+
     // fetch("/api/translate", {
     //   body,
     //   headers,
