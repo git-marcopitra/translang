@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Tesseract from "tesseract.js";
 
 function App() {
   const [src, setSrc] = useState("");
@@ -6,37 +7,46 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   const onChange = async (e: any) => {
+    const formData = new FormData();
+    formData.append("image", e.target.files[0]);
     const tempSrc = URL.createObjectURL(new File(e.target.files, "image"));
     setSrc(tempSrc || "");
 
     setLoading(true);
 
     const headers = new Headers();
-    headers.append("Content-Type", "application/json");
     headers.append("Access-Control-Allow-Origin", "*");
     headers.append("crossdomain", "true");
-    const data = await (await (await fetch(tempSrc)).blob()).arrayBuffer();
-    console.log("data :::: ", data);
-    const body = JSON.stringify({ picture: tempSrc });
+
+    const body = formData;
     const timeBeforeTranslate = Date.now();
-    fetch("/api/translate", {
-      body,
-      headers,
-      method: "post",
-      redirect: "follow",
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        console.log(
-          `${Date.now() - timeBeforeTranslate}ms - Result ::: `,
-          result
-        );
-        setOCRText(result.text);
-      })
-      .catch((e) => {
-        console.log(e);
-      })
-      .finally(() => setLoading(false));
+
+    await Tesseract.recognize(
+      tempSrc,
+      "eng",
+      { logger: (m) => console.log(m) }
+    ).then(({ data: { text } }) => {
+      setOCRText(text);
+    });
+    setLoading(false);
+    // fetch("/api/translate", {
+    //   body,
+    //   headers,
+    //   method: "post",
+    //   redirect: "follow",
+    // })
+    //   .then((response) => response.json())
+    //   .then((result) => {
+    //     console.log(
+    //       `${Date.now() - timeBeforeTranslate}ms - Result ::: `,
+    //       result
+    //     );
+    //     setOCRText(result.text);
+    //   })
+    //   .catch((e) => {
+    //     console.log(e);
+    //   })
+    //   .finally(() => setLoading(false));
   };
 
   return (
@@ -66,7 +76,9 @@ function App() {
         </div>
         <div className="translated">
           <h2>Translated text</h2>
-          <p className="translated-text">{loading ? "Reading..." : OCRText || "nothing to show"}</p>
+          <p className="translated-text">
+            {loading ? "Reading..." : OCRText || "nothing to show"}
+          </p>
         </div>
       </div>
     </div>

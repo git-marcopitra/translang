@@ -1,18 +1,28 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { recognizeImage } from '../../server';
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: `${Infinity}mb`
+    },
+  },
+}
 
 const translate = async (
   req: NextApiRequest,
   res: NextApiResponse<any>
 ) => {
-  const data = req.body;
-  console.log('Data :::: ', data);
+  console.log('Request :::: ',req)
+  const img = req.body
+  console.log('Image :::: ', img);
   try {
-    const result = await recognizeImage(data.picture);
+    const result = await recognizeImage(img);
     res.status(200).json(result);
   } catch {
-    res.status(401);
+    res.status(401).statusMessage = "Bad request";
   }
 }
 
 export default translate;
+
